@@ -5,7 +5,10 @@ const letterMatrix = [
   ["t", "n", "t", "n"],
 ];
 
-const knownWords = ["die"];
+const ROW_LENGTH = letterMatrix.length;
+const COLUMN_LENGTH = letterMatrix[0].length;
+
+const knownWords = ["die", "dent", "dive", "vet", "ten", "blah"];
 const maxWordLength = knownWords.reduce(
   (length, word) => (word.length > length ? word.length : length),
   0,
@@ -25,13 +28,15 @@ function isWord(sequence: string): boolean | undefined {
 function findWord(
   rowIndex: number,
   columnIndex: number,
-  sequence: string | null = null,
+  sequence: string | undefined = undefined,
 ): string | undefined {
-  const newSequence = sequence || letterMatrix[rowIndex][columnIndex];
+  console.log(`RowIndex: ${rowIndex}, ColumnIndex: ${columnIndex}`);
+  const currentCharacter = letterMatrix[rowIndex][columnIndex];
+  const newSequence = sequence ? sequence + currentCharacter : currentCharacter;
   if (isWord(newSequence)) {
     return newSequence;
   }
-  if (newSequence.length == maxWordLength) {
+  if (newSequence.length >= maxWordLength) {
     return;
   }
   const indicesToTry = [rowIndex - 1, rowIndex, rowIndex + 1]
@@ -44,12 +49,14 @@ function findWord(
     .filter(
       ([ri, ci]) =>
         ri >= 0 &&
-        ri <= 4 &&
+        ri < ROW_LENGTH &&
         ci >= 0 &&
-        ci <= 4 &&
+        ci < COLUMN_LENGTH &&
         (ri != rowIndex || ci != columnIndex),
     );
-  console.log(`Sequence: ${sequence}, Indices: ${indicesToTry.join("|")}`);
+  console.log(
+    `RowIndex: ${rowIndex}, ColumnIndex: ${columnIndex}, Sequence: ${newSequence}, Indices: ${indicesToTry.join("|")}`,
+  );
 
   for (const [ri, ci] of indicesToTry) {
     const word = findWord(ri, ci, newSequence);
@@ -59,31 +66,11 @@ function findWord(
   }
 }
 
-letterMatrix
-  .flatMap((row: string[], rowIndex: number) => {
-    return row.reduce((words: string[], _: string, columnIndex: number) => {
-      const word = findWord(rowIndex, columnIndex);
-      return word ? [...words, word] : words;
-    }, []);
-  }, [])
-  .forEach(console.log);
+const words = letterMatrix.flatMap((row: string[], rowIndex: number) => {
+  return row.reduce((words: string[], _: string, columnIndex: number) => {
+    const word = findWord(rowIndex, columnIndex);
+    return word ? [...words, word] : words;
+  }, []);
+}, []);
 
-/*
-const lettersWithIndices: [string, number, number][] = letterMatrix.flatMap(
-  (row, rowIndex) => {
-    return row.map(
-      (character: string, columnIndex: number): [string, number, number] => {
-        return [character, rowIndex, columnIndex];
-      },
-    );
-  },
-);
-
-const words = lettersWithIndices.reduce(
-  (words: string[], tuple: [string, number, number]) => {
-    const [character, rowIndex, columnIndex] = tuple;
-    return words;
-  },
-  [],
-);
-*/
+console.log(`Words = ${words.join(", ")}`);
